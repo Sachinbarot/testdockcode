@@ -15,11 +15,11 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var _items = [
-    {"image": "assets/launchpad.png", "name": "Launchpad"},
-    {"image": "assets/music.png", "name": "Music"},
-    {"image": "assets/chrome.png", "name": "Google Chrome"},
-    {"image": "assets/facetime.png", "name": "Facetime"},
-    {"image": "assets/photos.png", "name": "Photos"}
+    {"image": "assets/assets/launchpad.png", "name": "Launchpad"},
+    {"image": "assets/assets/music.png", "name": "Music"},
+    {"image": "assets/assets/chrome.png", "name": "Google Chrome"},
+    {"image": "assets/assets/facetime.png", "name": "Facetime"},
+    {"image": "assets/assets/photos.png", "name": "Photos"}
   ];
 
   dynamic dragIndex;
@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
         body: Stack(
           children: [
             Image.asset(
-              "assets/back.jpg",
+              "assets/assets/back.jpg",
               height: double.infinity,
               fit: BoxFit.fill,
             ),
