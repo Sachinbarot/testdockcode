@@ -15,15 +15,23 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var _items = [
-    Icons.person,
-    Icons.message,
-    Icons.call,
-    Icons.camera,
-    Icons.photo,
+    {"icon": Icons.person, "name": "Contact"},
+    {"icon": Icons.message, "name": "Message"},
+    {"icon": Icons.call, "name": "Calls"},
+    {"icon": Icons.camera, "name": "Camera"},
+    {"icon": Icons.photo, "name": "Gallary"}
   ];
+
+  dynamic dragIndex;
+  dynamic currentIndex;
+  bool isReordering = false;
+  dynamic currentIcon;
+  IconData dragIcon = Icons.drag_indicator;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Center(
           child: Dock(
@@ -50,30 +58,102 @@ class _MyAppState extends State<MyApp> {
                                 e.hashCode % Colors.primaries.length],
                           ),
                           child: Center(
-                              child: Icon(e, color: Colors.white, size: 32)),
+                              child: Icon(e["icon"] as IconData,
+                                  color: Colors.white, size: 32)),
                         ),
                       ),
-                      childWhenDragging: const SizedBox.shrink(),
-                      onDragCompleted: () {},
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                        constraints: BoxConstraints(
-                          minWidth: hover ? 60 : 48,
-                        ),
-                        height: hover ? 60 : 48,
-                        margin: const EdgeInsets.all(8),
-                        transform: Matrix4.translationValues(
-                            0, hover ? -10.0 : 0.0, 0.0),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors
-                              .primaries[e.hashCode % Colors.primaries.length],
-                        ),
-                        child: Center(
-                            child: Icon(e,
-                                color: Colors.white, size: hover ? 32 : 24)),
+                      childWhenDragging: SizedBox(
+                        width: 48,
                       ),
+                      onDragStarted: () {
+                        setState(() {
+                          isReordering = true;
+                          // _items.remove(index);
+                          dragIndex = index;
+                        });
+                      },
+                      onDraggableCanceled: (velocity, offset) {
+                        setState(() {
+                          isReordering = false;
+                        });
+                      },
+                      onDragCompleted: () {
+                        setState(() {
+                          if (dragIndex > index) {
+                            index -= 1; // Move the dragged item to the left
+                          } else {
+                            index += 1; // move to the next index
+                          }
+                          isReordering = false;
+                        });
+                      },
+                      child: isReordering
+                          ? DragTarget(
+                              onAcceptWithDetails: (details) {
+                                setState(() {
+                                  print(details.data);
+                                  currentIcon = _items[index]['icon'];
+                                  _items[index]['icon'] =
+                                      _items[details.data as int]['icon']
+                                          as IconData;
+                                  _items[details.data as int]['icon'] =
+                                      currentIcon;
+                                });
+                              },
+                              builder: (BuildContext context, dynamic accept,
+                                  dynamic reject) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      color: Colors.primaries[
+                                          e.hashCode % Colors.primaries.length],
+                                    ),
+                                    child: Center(
+                                        child: Icon(
+                                      dragIcon,
+                                      color: Colors.white,
+                                      size: 32,
+                                    )),
+                                  ),
+                                );
+                              },
+                            )
+                          : Tooltip(
+                              preferBelow: false,
+                              margin: const EdgeInsets.only(bottom: 20.0),
+                              padding: const EdgeInsets.only(
+                                  bottom: 8.0, top: 8.0, right: 8.0, left: 8.0),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  color: Colors.grey.shade300,
+                                  shape: BoxShape.rectangle),
+                              message: e['name'] as String,
+                              textStyle: TextStyle(fontSize: 14.0),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                constraints: BoxConstraints(
+                                  minWidth: hover ? 60 : 48,
+                                ),
+                                height: hover ? 60 : 48,
+                                margin: const EdgeInsets.all(8),
+                                transform: Matrix4.translationValues(
+                                    0, hover ? -10.0 : 0.0, 0.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.primaries[
+                                      e.hashCode % Colors.primaries.length],
+                                ),
+                                child: Center(
+                                    child: Icon(e["icon"] as IconData,
+                                        color: Colors.white,
+                                        size: hover ? 32 : 24)),
+                              ),
+                            ),
                     );
                   },
                 ),
@@ -81,9 +161,12 @@ class _MyAppState extends State<MyApp> {
             },
             onReorder: (oldIndex, newIndex) {
               setState(() {
-                if (newIndex > oldIndex) newIndex -= 1;
-                final item = _items.removeAt(oldIndex);
-                _items.insert(newIndex, item);
+                print("simple");
+                print(newIndex);
+                print(newIndex > oldIndex ? newIndex -= 1 : newIndex += 1);
+                print(newIndex);
+                // final item = _items.removeAt(oldIndex);
+                // _items.insert(newIndex, item);
               });
             },
           ),
@@ -136,7 +219,7 @@ class _DockState<T> extends State<Dock<T>> {
           final item = entry.value;
           return widget.builder(item, ValueNotifier(false), index,
               (oldIndex, newIndex) {
-            widget.onReorder(oldIndex, newIndex);
+            widget.onReorder(newIndex, oldIndex);
           });
         }).toList(),
       ),
